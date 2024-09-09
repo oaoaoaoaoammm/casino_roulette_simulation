@@ -14,9 +14,7 @@ cycles = 100  # количество циклов
 
 # Функция для запуска одной игры рулетки
 def spin_roulette():
-    num = random.choice(NUMBERS)
-    print(f'Выпало число: {num}')
-    return num
+    return random.choice(NUMBERS)
 
 # Функция для расчета выигрыша/проигрыша по одной ставке
 def evaluate_bet(bet_type, number, bet_value=None):
@@ -52,16 +50,26 @@ def evaluate_bet(bet_type, number, bet_value=None):
 
 # Заранее заданные ставки
 bets = [
-    ('corner', [[2, 3, 5, 6], [7, 8, 10, 11], [14, 15, 17, 18], [19, 20, 22, 23], [26, 27, 29, 30], [31, 31, 34, 35]]),  # Ставка на угол
+    ('corner', [[2, 3, 5, 6], [7, 8, 10, 11], [14, 15, 17, 18], [19, 20, 22, 23], [26, 27, 29, 30], [31, 32, 34, 35]]),  # Ставка на угол
     ('dozen', [1, 3]),          # Ставка на дюжину (1-я дюжина)
     ('column', [1, 2])          # Ставка на 2-й ряд (вертикальная колонка)
 ]
 
+
 # Основной цикл
 def simulate_roulette():
     balance = initial_balance
+    total_bets = 0
+    total_wins = 0
+
     for _ in range(cycles):
+        if balance < bet_amount:
+            print("Баланс недостаточен для продолжения игры.")
+            break
+
         number = spin_roulette()
+        total_bet = len(bets) * bet_amount
+        total_bets += total_bet
         total_win = 0
 
         for bet_type, bet_value in bets:
@@ -83,23 +91,18 @@ def simulate_roulette():
             else:
                 total_win -= bet_amount  # проигрыш по данной ставке
 
-        print(f'Выигрыш: {total_win}')
         balance += total_win
-        print(f'баланс: {balance}')
+        total_wins += total_win
 
-    return balance
+        print(f'Выпало число: {number}')
+        print(f'Сумма ставки: {total_bet}')
+        print(f'Выигрыш: {total_win}')
+        print(f'Баланс: {balance}')
+
+    return balance, total_bets, total_wins
 
 # Запуск симуляции
-print(evaluate_bet('red', 5))    # True
-print(evaluate_bet('black', 2))  # True
-print(evaluate_bet('even', 6))   # True
-print(evaluate_bet('odd', 7))    # True
-print(evaluate_bet('low', 10))   # True
-print(evaluate_bet('high', 20))  # True
-print(evaluate_bet('number', 13, 13))  # True
-print(evaluate_bet('number', 13, 15))  # False
-print(evaluate_bet('column', 2, [1, 2]))  # True
-print(evaluate_bet('dozen', 14, [1, 2]))  # True
-print(evaluate_bet('corner', 5, [[2, 3, 5, 6]]))  # True
-final_balance = simulate_roulette()
+final_balance, total_bets, total_wins = simulate_roulette()
 print(f'Финальный баланс после {cycles} циклов: {final_balance}')
+print(f'Общая сумма ставок: {total_bets}')
+print(f'Общая сумма выигрышей: {total_wins}')
