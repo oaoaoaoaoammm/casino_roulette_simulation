@@ -11,7 +11,7 @@ DOZENS = {1: list(range(1, 13)), 2: list(range(13, 25)), 3: list(range(25, 37))}
 initial_balance = 100  # начальный баланс игрока
 bet_amount = 1  # ставка на одно поле
 cycles = 10000000  # количество циклов
-history_size = 4  # Количество последних чисел для анализа
+history_size = 10  # Количество последних чисел для анализа
 
 # Хранение последних чисел
 history = []
@@ -81,14 +81,21 @@ bets2 = [
 def get_current_bets():
     if len(history) < history_size:
         return bets1  # Если недостаточно данных, используем первую стратегию
+
+    # Подсчет числа подходящих чисел для каждой ставки
     counts = {bet_type: 0 for bet_type, _ in bets1}
     for number in history:
         for bet_type, bet_value in bets1:
             if evaluate_bet(bet_type, number, bet_value):
                 counts[bet_type] += 1
+
+    # Определение порога в 80% от размера истории
+    threshold = (history_size * 80) // 100
+
     # Если количество чисел, подходящих под bets2, превышает порог, используем bets2
-    if any(count > history_size // 2 for count in counts.values()):
+    if any(count > threshold for count in counts.values()):
         return bets2
+
     return bets1
 
 # Основной цикл
