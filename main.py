@@ -11,6 +11,10 @@ DOZENS = {1: list(range(1, 13)), 2: list(range(13, 25)), 3: list(range(25, 37))}
 initial_balance = 100  # начальный баланс игрока
 bet_amount = 1  # ставка на одно поле
 cycles = 10000000  # количество циклов
+history_size = 4  # Количество последних чисел для анализа
+
+# Хранение последних чисел
+history = []
 
 # Функция для запуска одной игры рулетки
 def spin_roulette():
@@ -56,7 +60,7 @@ bets1 = [
     ('corner', [31, 32, 34, 35]),  # Ставка на угол
     ('dozen', 1),          # Ставка на дюжину (1-я дюжина)
     ('dozen', 2),  # Ставка на дюжину (2-я дюжина)
-    ('row', 1),  # Ставка на 1-й ряд 
+    ('row', 1),  # Ставка на 1-й ряд
     ('row', 3)  # Ставка на 3-й ряд
 ]
 
@@ -73,6 +77,21 @@ bets2 = [
     ('row', 3)  # Ставка на 3-й ряд
 ]
 
+# Функция для определения текущих ставок
+def get_current_bets():
+    if len(history) < history_size:
+        return bets1  # Если недостаточно данных, используем первую стратегию
+    counts = {bet_type: 0 for bet_type, _ in bets1}
+    for number in history:
+        for bet_type, bet_value in bets1:
+            if evaluate_bet(bet_type, number, bet_value):
+                counts[bet_type] += 1
+    # Если количество чисел, подходящих под bets2, превышает порог, используем bets2
+    if any(count > history_size // 2 for count in counts.values()):
+        return bets2
+    return bets1
+
+# Основной цикл
 # Основной цикл
 def simulate_roulette():
     balance = initial_balance
@@ -86,28 +105,33 @@ def simulate_roulette():
             break
 
         number = spin_roulette()
-        total_bet = len(bets1) * bet_amount
+        history.append(number)
+        if len(history) > history_size:
+            history.pop(0)  # Удаляем старые числа, если их больше history_size
+
+        bets = get_current_bets()
+        total_bet = len(bets) * bet_amount
         total_bets += total_bet
         total_win = 0
 
-        for bet_type, bet_value in bets1:
+        for bet_type, bet_value in bets:
             if evaluate_bet(bet_type, number, bet_value):
                 if bet_type == 'number':
-                    total_win += bet_amount * 35  # выигрыш для числа с множителем 35
+                    total_win += bet_amount * 35
                 elif bet_type == 'split':
-                    total_win += bet_amount * 17  # выигрыш для сплита с множителем 17
+                    total_win += bet_amount * 17
                 elif bet_type == 'street':
-                    total_win += bet_amount * 11  # выигрыш для улицы с множителем 11
+                    total_win += bet_amount * 11
                 elif bet_type == 'corner':
-                    total_win += bet_amount * 8  # выигрыш для угла с множителем 8
+                    total_win += bet_amount * 8
                 elif bet_type == 'six_line':
-                    total_win += bet_amount * 5  # выигрыш для линии с множителем 5
+                    total_win += bet_amount * 5
                 elif bet_type in ['column', 'dozen', 'row']:
-                    total_win += bet_amount * 2  # выигрыш для ряда/дюжины/колонки с множителем 2
+                    total_win += bet_amount * 2
                 else:
-                    total_win += bet_amount  # выигрыш для простых ставок (красное/черное, чет/нечет и т.д.)
+                    total_win += bet_amount
             else:
-                total_win -= bet_amount  # проигрыш по данной ставке
+                total_win -= bet_amount  # Уменьшение баланса при проигрыше
 
         balance += total_win
         total_wins += total_win
@@ -119,7 +143,6 @@ def simulate_roulette():
         total_cycles_done += 1
 
     return balance, total_wins, total_cycles_done
-
 # Запуск симуляции
 final_balance, total_wins, tot_cycles = simulate_roulette()
 print(f'Финальный баланс: {final_balance}')
