@@ -8,9 +8,9 @@ ROWS = {1: list(range(1, 37, 3)), 2: list(range(2, 37, 3)), 3: list(range(3, 37,
 DOZENS = {1: list(range(1, 13)), 2: list(range(13, 25)), 3: list(range(25, 37))}  # Дюжины
 
 # Начальные параметры
-initial_balance = 20  # начальный баланс игрока
+initial_balance = 100  # начальный баланс игрока
 bet_amount = 1  # ставка на одно поле
-cycles = 100  # количество циклов
+cycles = 10000000  # количество циклов
 
 # Функция для запуска одной игры рулетки
 def spin_roulette():
@@ -37,33 +37,40 @@ def evaluate_bet(bet_type, number, bet_value=None):
     elif bet_type == 'street':
         return number in bet_value
     elif bet_type == 'corner':  # Ставка на угол
-        return any(number in corner for corner in bet_value)
+        return number in bet_value
     elif bet_type == 'six_line':
         return number in bet_value
     elif bet_type == 'column':
-        return number in [n for row in ROWS.values() if row in bet_value for n in row]
+        return number in ROWS[bet_value]
     elif bet_type == 'dozen':
-        return number in [n for d in bet_value for n in DOZENS[d]]
+        return number in DOZENS[bet_value]
     elif bet_type == 'row':
         return number in ROWS[bet_value]
     return False
 
 # Заранее заданные ставки
 bets = [
-    ('corner', [[2, 3, 5, 6], [7, 8, 10, 11], [14, 15, 17, 18], [19, 20, 22, 23], [26, 27, 29, 30], [31, 32, 34, 35]]),  # Ставка на угол
-    ('dozen', [1, 3]),          # Ставка на дюжину (1-я дюжина)
-    ('column', [1, 2])          # Ставка на 2-й ряд (вертикальная колонка)
+    ('corner', [2, 3, 5, 6]),  # Ставка на угол
+    ('corner', [7, 8, 10, 11]),  # Ставка на угол
+    ('corner', [14, 15, 17, 18]),  # Ставка на угол
+    ('corner', [19, 20, 22, 23]),  # Ставка на угол
+    ('corner', [26, 27, 29, 30]),  # Ставка на угол
+    ('corner', [31, 32, 34, 35]),  # Ставка на угол
+    ('dozen', 1),          # Ставка на дюжину (1-я дюжина)
+    ('dozen', 3),  # Ставка на дюжину (3-я дюжина)
+    ('column', 1),  # Ставка на 1-й ряд (вертикальная колонка)
+    ('column', 2)  # Ставка на 2-й ряд (вертикальная колонка)
 ]
-
 
 # Основной цикл
 def simulate_roulette():
     balance = initial_balance
     total_bets = 0
     total_wins = 0
+    total_cycles_done = 0
 
     for _ in range(cycles):
-        if balance < bet_amount:
+        if balance < bet_amount * len(bets):
             print("Баланс недостаточен для продолжения игры.")
             break
 
@@ -95,14 +102,15 @@ def simulate_roulette():
         total_wins += total_win
 
         print(f'Выпало число: {number}')
-        print(f'Сумма ставки: {total_bet}')
+        print(f'Сумма ставок: {total_bet}')
         print(f'Выигрыш: {total_win}')
         print(f'Баланс: {balance}')
+        total_cycles_done += 1
 
-    return balance, total_bets, total_wins
+    return balance, total_wins, total_cycles_done
 
 # Запуск симуляции
-final_balance, total_bets, total_wins = simulate_roulette()
-print(f'Финальный баланс после {cycles} циклов: {final_balance}')
-print(f'Общая сумма ставок: {total_bets}')
+final_balance, total_wins, tot_cycles = simulate_roulette()
+print(f'Финальный баланс: {final_balance}')
 print(f'Общая сумма выигрышей: {total_wins}')
+print(f'Общее количество игр: {tot_cycles}')
