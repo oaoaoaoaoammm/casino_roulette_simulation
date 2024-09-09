@@ -40,8 +40,6 @@ def evaluate_bet(bet_type, number, bet_value=None):
         return number in bet_value
     elif bet_type == 'six_line':
         return number in bet_value
-    elif bet_type == 'column':
-        return number in ROWS[bet_value]
     elif bet_type == 'dozen':
         return number in DOZENS[bet_value]
     elif bet_type == 'row':
@@ -49,7 +47,7 @@ def evaluate_bet(bet_type, number, bet_value=None):
     return False
 
 # Заранее заданные ставки
-bets = [
+bets1 = [
     ('corner', [2, 3, 5, 6]),  # Ставка на угол
     ('corner', [7, 8, 10, 11]),  # Ставка на угол
     ('corner', [14, 15, 17, 18]),  # Ставка на угол
@@ -57,9 +55,22 @@ bets = [
     ('corner', [26, 27, 29, 30]),  # Ставка на угол
     ('corner', [31, 32, 34, 35]),  # Ставка на угол
     ('dozen', 1),          # Ставка на дюжину (1-я дюжина)
-    ('dozen', 3),  # Ставка на дюжину (3-я дюжина)
-    ('column', 1),  # Ставка на 1-й ряд (вертикальная колонка)
-    ('column', 2)  # Ставка на 2-й ряд (вертикальная колонка)
+    ('dozen', 2),  # Ставка на дюжину (2-я дюжина)
+    ('row', 1),  # Ставка на 1-й ряд 
+    ('row', 3)  # Ставка на 3-й ряд
+]
+
+bets2 = [
+    ('corner', [1, 2, 4, 5]),  # Ставка на угол
+    ('corner', [8, 9, 11, 12]),  # Ставка на угол
+    ('corner', [13, 14, 16, 17]),  # Ставка на угол
+    ('corner', [20, 21, 23, 24]),  # Ставка на угол
+    ('corner', [25, 26, 28, 29]),  # Ставка на угол
+    ('corner', [32, 33, 35, 36]),  # Ставка на угол
+    ('dozen', 1),          # Ставка на дюжину (1-я дюжина)
+    ('dozen', 2),  # Ставка на дюжину (2-я дюжина)
+    ('row', 1),  # Ставка на 1-й ряд
+    ('row', 3)  # Ставка на 3-й ряд
 ]
 
 # Основной цикл
@@ -70,16 +81,16 @@ def simulate_roulette():
     total_cycles_done = 0
 
     for _ in range(cycles):
-        if balance < bet_amount * len(bets):
+        if balance < bet_amount * len(bets1):
             print("Баланс недостаточен для продолжения игры.")
             break
 
         number = spin_roulette()
-        total_bet = len(bets) * bet_amount
+        total_bet = len(bets1) * bet_amount
         total_bets += total_bet
         total_win = 0
 
-        for bet_type, bet_value in bets:
+        for bet_type, bet_value in bets1:
             if evaluate_bet(bet_type, number, bet_value):
                 if bet_type == 'number':
                     total_win += bet_amount * 35  # выигрыш для числа с множителем 35
