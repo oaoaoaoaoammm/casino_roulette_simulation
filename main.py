@@ -1,4 +1,9 @@
 import random
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.drawing.image import Image
+from openpyxl.chart import LineChart, Reference
 
 # Константы для рулетки
 NUMBERS = list(range(37))  # Числа от 0 до 36
@@ -11,10 +16,13 @@ DOZENS = {1: list(range(1, 13)), 2: list(range(13, 25)), 3: list(range(25, 37))}
 initial_balance = 100  # начальный баланс игрока
 bet_amount = 1  # ставка на одно поле
 cycles = 10000000  # количество циклов
-history_size = 10  # Количество последних чисел для анализа
+history_size = 5  # Количество последних чисел для анализа
 
 # Хранение последних чисел
 history = []
+
+# Хранение данных для таблицы
+data = []
 
 # Функция для запуска одной игры рулетки
 def spin_roulette():
@@ -101,12 +109,13 @@ def get_current_bets():
 # Основной цикл
 # Основной цикл
 def simulate_roulette():
+    global history
     balance = initial_balance
     total_bets = 0
     total_wins = 0
     total_cycles_done = 0
 
-    for _ in range(cycles):
+    for cycle in range(cycles):
         if balance < bet_amount * len(bets1):
             print("Баланс недостаточен для продолжения игры.")
             break
@@ -118,7 +127,6 @@ def simulate_roulette():
 
         bets = get_current_bets()
         total_bet = len(bets) * bet_amount
-        total_bets += total_bet
         total_win = 0
 
         for bet_type, bet_value in bets:
@@ -143,15 +151,62 @@ def simulate_roulette():
         balance += total_win
         total_wins += total_win
 
-        print(f'Выпало число: {number}')
-        print(f'Сумма ставок: {total_bet}')
-        print(f'Выигрыш: {total_win}')
-        print(f'Баланс: {balance}')
+        # Сохранение данных в таблицу
+        data.append({
+            'Cycle': cycle,
+            'Number': number,
+            'Total Bet': total_bet,
+            'Total Win': total_win,
+            'Balance': balance
+        })
+
         total_cycles_done += 1
 
     return balance, total_wins, total_cycles_done
+
 # Запуск симуляции
 final_balance, total_wins, tot_cycles = simulate_roulette()
 print(f'Финальный баланс: {final_balance}')
 print(f'Общая сумма выигрышей: {total_wins}')
 print(f'Общее количество игр: {tot_cycles}')
+
+# Создание таблицы и графиков
+df = pd.DataFrame(data)
+
+# Создание и запись в Excel
+wb = Workbook()
+ws = wb.active
+ws.title = 'Data'
+
+# Запись данных
+for row in dataframe_to_rows(df, index=False, header=True):
+    ws.append(row)
+
+# Построение графиков
+# График для баланса
+chart_balance = LineChart()
+chart_balance.title = "Balance Over Time"
+chart_balance.style = 13
+chart_balance.x_axis.title = "Cycle"
+chart_balance.y_axis.title = "Balance"
+
+data_balance = Reference(ws, min_col=5, min_row=1, max_col=5, max_row=len(df)+1)
+categories_balance = Reference(ws, min_col=1, min_row=2, max_row=len(df)+1)
+chart_balance.add_data(data_balance, titles_from_data=True)
+chart_balance.set_categories(categories_balance)
+ws.add_chart(chart_balance, "G5")
+
+# График для выигрышей
+chart_wins = LineChart()
+chart_wins.title = "Total Wins Over Time"
+chart_wins.style = 13
+chart_wins.x_axis.title = "Cycle"
+chart_wins.y_axis.title = "Total Win"
+data_wins = Reference(ws, min_col=4, min_row=1, max_col=4, max_row=len(df)+1)
+categories_wins = Reference(ws, min_col=1, min_row=2, max_row=len(df)+1)
+chart_wins.add_data(data_wins, titles_from_data=True)
+chart_wins.set_categories(categories_wins)
+ws.add_chart(chart_wins, "G25")
+
+# Сохранение файла Excel
+wb.save("roulette_simulation.xlsx")
